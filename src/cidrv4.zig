@@ -64,24 +64,23 @@ pub fn iterator(self: Self) Iterator {
 }
 
 pub fn parseIPv4(ip: []const u8) !u32 {
-    var r: u32 = 0;
-    var count: usize = 0;
-    var it = std.mem.splitAny(u8, ip, ".");
-
-    while (it.next()) |entry| {
-        count += 1;
-        if (count > 4) return error.InvalidIPv4;
-        const tmp = std.fmt.parseInt(u8, entry, 0) catch {
-            return error.InvalidIPv4;
-        };
-        r *= 256;
-        r += tmp;
+    if (std.mem.containsAtLeast(u8, ip, 1, ".")) {
+        var count: usize = 0;
+        var it = std.mem.splitAny(u8, ip, ".");
+        var r: u32 = 0;
+        while (it.next()) |entry| {
+            count += 1;
+            if (count > 4) return error.InvalidIPv4;
+            const tmp = std.fmt.parseInt(u8, entry, 0) catch {
+                return error.InvalidIPv4;
+            };
+            r *= 256;
+            r += tmp;
+        }
+        return r;
     }
 
-    if (count >= 1) return r;
-
-    const tmp = std.fmt.parseInt(u32, ip, 0) catch {
+    return std.fmt.parseInt(u32, ip, 0) catch {
         return error.InvalidIPv4;
     };
-    return tmp;
 }
