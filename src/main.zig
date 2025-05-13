@@ -15,6 +15,20 @@ pub fn main() void {
     };
 }
 
+const Format = enum { dot, hex, raw };
+const Option = enum {
+    h,
+    help,
+    f,
+    format,
+    u,
+    unique,
+    e,
+    exclude,
+    r,
+    @"exclude-reserved",
+};
+
 fn run() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     var excludes = std.ArrayList(CIDRv4).init(gpa.allocator());
@@ -42,82 +56,89 @@ fn run() !void {
     var w = wbuf.writer().any();
 
     var unique = false;
-    const Format = enum { dot, hex, raw };
     var format = Format.dot;
 
     while (args.next()) |arg| {
         if (std.mem.startsWith(u8, arg, "-")) {
-            const opt = blk: {
+            const optname = blk: {
                 if (std.mem.startsWith(u8, arg, "--")) {
                     break :blk arg[2..];
                 }
                 break :blk arg[1..];
             };
 
-            const usage =
-                \\usage: {s} [-h] [-f fmt] [-e cidr] [-u] [-r] [cidr...]
-                \\
-                \\options:
-                \\    -h, --help              shows usage and exits
-                \\    -f, --format            output format (raw,hex,dot)
-                \\    -e, --exclude           exclude cidr from output (this options can be
-                \\                            used multiple times)
-                \\    -u, --unique            add cidr to exclude list after printing it
-                \\    -r, --exclude-reserved  exclude reserved cidrs
-                \\
-            ;
-
-            if (std.mem.eql(u8, opt, "h") or std.mem.eql(u8, opt, "help")) {
-                try stdoutw.print(usage, .{progname});
-                std.process.exit(0);
-            } else if (std.mem.eql(u8, opt, "f") or std.mem.eql(u8, opt, "format")) {
-                const val = args.next();
-                if (val == null) {
-                    try stderrw.print("-f requires an argument\n", .{});
-                    std.process.exit(1);
-                }
-                const tmp = std.meta.stringToEnum(Format, val.?);
-                if (tmp == null) {
-                    try stderrw.print("-f {s} is invalid\n", .{val.?});
-                    std.process.exit(1);
-                }
-                format = tmp.?;
-            } else if (std.mem.eql(u8, opt, "e") or std.mem.eql(u8, opt, "exclude")) {
-                const val = args.next();
-                if (val == null) {
-                    try stderrw.print("-e requires an argument\n", .{});
-                    std.process.exit(1);
-                }
-                try appendCIDRv4(&excludes, try CIDRv4.parse(val.?));
-            } else if (std.mem.eql(u8, opt, "u") or std.mem.eql(u8, opt, "unique")) {
-                unique = true;
-            } else if (std.mem.eql(u8, opt, "r") or std.mem.eql(u8, opt, "exclude-reserved")) {
-                const reserved = [_][]const u8{
-                    "0.0.0.0/8",
-                    "10.0.0.0/8",
-                    "100.64.0.0/10",
-                    "127.0.0.0/8",
-                    "169.254.0.0/16",
-                    "172.16.0.0/12",
-                    "192.0.0.0/24",
-                    "192.0.2.0/24",
-                    "192.88.99.0/24",
-                    "192.168.0.0/16",
-                    "198.18.0.0/15",
-                    "198.51.100.0/24",
-                    "203.0.113.0/24",
-                    "224.0.0.0/4",
-                    "233.252.0.0/24",
-                    "240.0.0.0/4",
-                    "255.255.255.255/32",
-                };
-
-                for (reserved) |r| {
-                    try appendCIDRv4(&excludes, try CIDRv4.parse(r));
-                }
-            } else {
+            const opt: ?Option = std.meta.stringToEnum(Option, optname);
+            if (opt == null) {
                 try stderrw.print("unknown option {s}\n", .{arg});
                 std.process.exit(1);
+            }
+
+            switch (opt.?) {
+                .h, .help => {
+                    const usage =
+                        \\usage: {s} [-h] [-f fmt] [-e cidr] [-u] [-r] [cidr...]
+                        \\
+                        \\options:
+                        \\    -h, --help              shows usage and exits
+                        \\    -f, --format            output format (raw,hex,dot)
+                        \\    -e, --exclude           exclude cidr from output (this options can be
+                        \\                            used multiple times)
+                        \\    -u, --unique            add cidr to exclude list after printing it
+                        \\    -r, --exclude-reserved  exclude reserved cidrs
+                        \\
+                    ;
+                    try stdoutw.print(usage, .{progname});
+                    std.process.exit(0);
+                },
+                .f, .format => {
+                    const val = args.next();
+                    if (val == null) {
+                        try stderrw.print("-f requires an argument\n", .{});
+                        std.process.exit(1);
+                    }
+                    const tmp = std.meta.stringToEnum(Format, val.?);
+                    if (tmp == null) {
+                        try stderrw.print("-f {s} is invalid\n", .{val.?});
+                        std.process.exit(1);
+                    }
+                    format = tmp.?;
+                },
+                .e, .exclude => {
+                    const val = args.next();
+                    if (val == null) {
+                        try stderrw.print("-e requires an argument\n", .{});
+                        std.process.exit(1);
+                    }
+                    try appendCIDRv4(&excludes, try CIDRv4.parse(val.?));
+                },
+                .u, .unique => {
+                    unique = true;
+                },
+                .r, .@"exclude-reserved" => {
+                    const reserved = [_][]const u8{
+                        "0.0.0.0/8",
+                        "10.0.0.0/8",
+                        "100.64.0.0/10",
+                        "127.0.0.0/8",
+                        "169.254.0.0/16",
+                        "172.16.0.0/12",
+                        "192.0.0.0/24",
+                        "192.0.2.0/24",
+                        "192.88.99.0/24",
+                        "192.168.0.0/16",
+                        "198.18.0.0/15",
+                        "198.51.100.0/24",
+                        "203.0.113.0/24",
+                        "224.0.0.0/4",
+                        "233.252.0.0/24",
+                        "240.0.0.0/4",
+                        "255.255.255.255/32",
+                    };
+
+                    for (reserved) |r| {
+                        try appendCIDRv4(&excludes, try CIDRv4.parse(r));
+                    }
+                },
             }
         } else {
             try appendCIDRv4(&includes, try CIDRv4.parse(arg));
