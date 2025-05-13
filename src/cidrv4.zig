@@ -25,6 +25,15 @@ const Iterator = struct {
     }
 };
 
+pub fn min(self: Self) u32 {
+    return self.ipv4;
+}
+
+pub fn max(self: Self) u32 {
+    const end: u32 = @intCast(std.math.pow(u33, 2, 32 - self.bits) - 1);
+    return self.ipv4 | end;
+}
+
 pub fn contains(self: Self, ipv4: u32) bool {
     return (self.ipv4 == (ipv4 & self.mask));
 }

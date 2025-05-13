@@ -37,3 +37,12 @@ test "test iterator" {
     try std.testing.expect(it.next() == try CIDRv4.parseIPv4("192.168.0.255"));
     try std.testing.expect(it.next() == try CIDRv4.parseIPv4("192.168.1.0"));
 }
+
+test "test min max" {
+    var cidr = try CIDRv4.parse("192.168.10.0/24");
+    try std.testing.expect(cidr.min() == try CIDRv4.parseIPv4("192.168.10.0"));
+    try std.testing.expect(cidr.max() == try CIDRv4.parseIPv4("192.168.10.255"));
+    cidr = try CIDRv4.parse("0.0.0.0/0");
+    try std.testing.expect(cidr.min() == try CIDRv4.parseIPv4("0.0.0.0"));
+    try std.testing.expect(cidr.max() == try CIDRv4.parseIPv4("255.255.255.255"));
+}

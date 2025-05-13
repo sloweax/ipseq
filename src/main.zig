@@ -68,41 +68,43 @@ fn run() !void {
                     try stderrw.print("-e requires an argument\n", .{});
                     std.process.exit(1);
                 }
-                try excludes.append(try CIDRv4.parse(val.?));
+                try appendCIDRv4(&excludes, try CIDRv4.parse(val.?));
             } else if (std.mem.eql(u8, opt, "r") or std.mem.eql(u8, opt, "exclude-reserved")) {
-                try excludes.appendSlice(&[_]CIDRv4{
-                    try CIDRv4.parse("0.0.0.0/8"),
-                    try CIDRv4.parse("10.0.0.0/8"),
-                    try CIDRv4.parse("100.64.0.0/10"),
-                    try CIDRv4.parse("127.0.0.0/8"),
-                    try CIDRv4.parse("169.254.0.0/16"),
-                    try CIDRv4.parse("172.16.0.0/12"),
-                    try CIDRv4.parse("192.0.0.0/24"),
-                    try CIDRv4.parse("192.0.2.0/24"),
-                    try CIDRv4.parse("192.88.99.0/24"),
-                    try CIDRv4.parse("192.168.0.0/16"),
-                    try CIDRv4.parse("198.18.0.0/15"),
-                    try CIDRv4.parse("198.51.100.0/24"),
-                    try CIDRv4.parse("203.0.113.0/24"),
-                    try CIDRv4.parse("224.0.0.0/4"),
-                    try CIDRv4.parse("233.252.0.0/24"),
-                    try CIDRv4.parse("240.0.0.0/4"),
-                    try CIDRv4.parse("255.255.255.255/32"),
-                });
+                try appendCIDRv4(&excludes, try CIDRv4.parse("0.0.0.0/8"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("10.0.0.0/8"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("100.64.0.0/10"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("127.0.0.0/8"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("169.254.0.0/16"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("172.16.0.0/12"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("192.0.0.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("192.0.2.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("192.88.99.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("192.168.0.0/16"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("198.18.0.0/15"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("198.51.100.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("203.0.113.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("224.0.0.0/4"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("233.252.0.0/24"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("240.0.0.0/4"));
+                try appendCIDRv4(&excludes, try CIDRv4.parse("255.255.255.255/32"));
             } else {
                 try stderrw.print("unknown option {s}\n", .{arg});
                 std.process.exit(1);
             }
         } else {
-            try includes.append(try CIDRv4.parse(arg));
+            try appendCIDRv4(&includes, try CIDRv4.parse(arg));
         }
     }
 
-    for (includes.items) |i| {
+    nextcidr: for (includes.items) |i| {
+        for (excludes.items) |e| {
+            if (e.contains(i.min()) and e.contains(i.max())) continue :nextcidr;
+        }
+
         var it = i.iterator();
-        outer: while (it.next()) |ip| {
+        nextip: while (it.next()) |ip| {
             for (excludes.items) |e| {
-                if (e.contains(ip)) continue :outer;
+                if (e.contains(ip)) continue :nextip;
             }
             const buf = std.mem.asBytes(&ip);
             try w.print("{}.{}.{}.{}\n", .{ buf[3], buf[2], buf[1], buf[0] });
@@ -110,6 +112,13 @@ fn run() !void {
     }
 
     try wbuf.flush();
+}
+
+fn appendCIDRv4(a: *std.ArrayList(CIDRv4), cidr: CIDRv4) !void {
+    for (a.items) |c| {
+        if (c.contains(cidr.min()) and c.contains(cidr.max())) return;
+    }
+    try a.append(cidr);
 }
 
 test {
