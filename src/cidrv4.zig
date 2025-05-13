@@ -2,7 +2,6 @@ const std = @import("std");
 
 ipv4: u32,
 mask: u32,
-bits: u6,
 
 const Self = @This();
 
@@ -30,8 +29,8 @@ pub fn min(self: Self) u32 {
 }
 
 pub fn max(self: Self) u32 {
-    const end: u32 = @intCast(std.math.pow(u33, 2, 32 - self.bits) - 1);
-    return self.ipv4 | end;
+    if (self.bits() == 0) return std.math.maxInt(u32);
+    return self.ipv4 | (std.math.pow(u32, 2, 32 - self.bits()) - 1);
 }
 
 pub fn contains(self: Self, ipv4: u32) bool {
@@ -52,15 +51,19 @@ pub fn parse(cidr: []const u8) !Self {
     if (b > 32) return error.InvalidCIDRv4;
     var m: u32 = std.math.maxInt(u32);
     m = std.math.shl(u32, m, 32 - b);
-    return .{ .ipv4 = a, .mask = m, .bits = @intCast(b) };
+    return .{ .ipv4 = a, .mask = m };
 }
 
 pub fn iterator(self: Self) Iterator {
     return .{
         .cidr = self,
-        .end = @intCast(std.math.pow(u33, 2, 32 - self.bits) - 1),
+        .end = self.max() & (~self.mask),
         .cur = self.ipv4 & (~self.mask),
     };
+}
+
+pub fn bits(self: Self) u6 {
+    return @popCount(self.mask);
 }
 
 pub fn parseIPv4(ip: []const u8) !u32 {
