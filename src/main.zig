@@ -1,4 +1,6 @@
 const std = @import("std");
+const builtin = @import("builtin");
+const native_endian = builtin.cpu.arch.endian();
 const CIDRv4 = @import("cidrv4.zig");
 
 pub fn main() void {
@@ -40,6 +42,8 @@ fn run() !void {
     var w = wbuf.writer().any();
 
     var unique = false;
+    const Format = enum { dot, hex, raw };
+    var format = Format.dot;
 
     while (args.next()) |arg| {
         if (std.mem.startsWith(u8, arg, "-")) {
@@ -51,10 +55,11 @@ fn run() !void {
             };
 
             const usage =
-                \\usage: {s} [-h] [-e cidr] [-u] [-r] [cidr...]
+                \\usage: {s} [-h] [-f fmt] [-e cidr] [-u] [-r] [cidr...]
                 \\
                 \\options:
                 \\    -h, --help              shows usage and exits
+                \\    -f, --format            output format (raw,hex,dot)
                 \\    -e, --exclude           exclude cidr from output (this options can be
                 \\                            used multiple times)
                 \\    -u, --unique            add cidr to exclude list after printing it
@@ -65,6 +70,18 @@ fn run() !void {
             if (std.mem.eql(u8, opt, "h") or std.mem.eql(u8, opt, "help")) {
                 try stdoutw.print(usage, .{progname});
                 std.process.exit(0);
+            } else if (std.mem.eql(u8, opt, "f") or std.mem.eql(u8, opt, "format")) {
+                const val = args.next();
+                if (val == null) {
+                    try stderrw.print("-f requires an argument\n", .{});
+                    std.process.exit(1);
+                }
+                const tmp = std.meta.stringToEnum(Format, val.?);
+                if (tmp == null) {
+                    try stderrw.print("-f {s} is invalid\n", .{val.?});
+                    std.process.exit(1);
+                }
+                format = tmp.?;
             } else if (std.mem.eql(u8, opt, "e") or std.mem.eql(u8, opt, "exclude")) {
                 const val = args.next();
                 if (val == null) {
@@ -117,8 +134,25 @@ fn run() !void {
             for (excludes.items) |e| {
                 if (e.contains(ip)) continue :nextip;
             }
-            const buf = std.mem.asBytes(&ip);
-            try w.print("{}.{}.{}.{}\n", .{ buf[3], buf[2], buf[1], buf[0] });
+            switch (format) {
+                .dot => {
+                    const buf = std.mem.asBytes(&ip);
+                    switch (native_endian) {
+                        .little => {
+                            try w.print("{}.{}.{}.{}\n", .{ buf[3], buf[2], buf[1], buf[0] });
+                        },
+                        .big => {
+                            try w.print("{}.{}.{}.{}\n", .{ buf[0], buf[1], buf[2], buf[3] });
+                        },
+                    }
+                },
+                .hex => {
+                    try w.print("{x}\n", .{ip});
+                },
+                .raw => {
+                    try w.writeInt(u32, ip, .big);
+                },
+            }
         }
 
         if (unique) try appendCIDRv4(&excludes, i);
