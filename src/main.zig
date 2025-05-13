@@ -51,7 +51,7 @@ fn run() !void {
             };
 
             const usage =
-                \\usage: {s} [-h] [-e cidr] [-r] [cidr...]
+                \\usage: {s} [-h] [-e cidr] [-u] [-r] [cidr...]
                 \\
                 \\options:
                 \\    -h, --help              shows usage and exits

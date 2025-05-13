@@ -1,6 +1,6 @@
 # Usage
 ```
-usage: ipseq [-h] [-e cidr] [-r] [cidr...]
+usage: ipseq [-h] [-e cidr] [-u] [-r] [cidr...]
 
 options:
     -h, --help              shows usage and exits
