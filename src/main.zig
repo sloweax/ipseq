@@ -91,6 +91,7 @@ fn run() !void {
                 });
             } else {
                 try stderrw.print("unknown option {s}\n", .{arg});
+                std.process.exit(1);
             }
         } else {
             try includes.append(try CIDRv4.parse(arg));
