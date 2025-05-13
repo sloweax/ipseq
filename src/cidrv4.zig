@@ -78,7 +78,10 @@ pub fn parseIPv4(ip: []const u8) !u32 {
         r += tmp;
     }
 
-    if (count != 4) return error.InvalidIPv4;
+    if (count >= 1) return r;
 
-    return r;
+    const tmp = std.fmt.parseInt(u32, ip, 0) catch {
+        return error.InvalidIPv4;
+    };
+    return tmp;
 }
