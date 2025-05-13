@@ -14,7 +14,7 @@ const Iterator = struct {
 
     pub fn next(self: *@This()) ?u32 {
         if (self.eof) return null;
-        var tmp = self.cidr.ipv4;
+        var tmp = self.cidr.ipv4 & self.cidr.mask;
         tmp |= self.cur;
         if (self.cur >= self.end) {
             self.eof = true;
@@ -35,7 +35,10 @@ pub fn max(self: Self) u32 {
 }
 
 pub fn contains(self: Self, ipv4: u32) bool {
-    return (self.ipv4 == (ipv4 & self.mask));
+    const a = self.ipv4 & self.mask;
+    const b = ipv4 & self.mask;
+    if (a == b) return ipv4 >= self.ipv4;
+    return false;
 }
 
 pub fn parse(cidr: []const u8) !Self {
@@ -49,12 +52,15 @@ pub fn parse(cidr: []const u8) !Self {
     if (b > 32) return error.InvalidCIDRv4;
     var m: u32 = std.math.maxInt(u32);
     m = std.math.shl(u32, m, 32 - b);
-    if (a & (~m) != 0) return error.InvalidCIDRv4;
     return .{ .ipv4 = a, .mask = m, .bits = @intCast(b) };
 }
 
 pub fn iterator(self: Self) Iterator {
-    return .{ .cidr = self, .end = @intCast(std.math.pow(u33, 2, 32 - self.bits) - 1) };
+    return .{
+        .cidr = self,
+        .end = @intCast(std.math.pow(u33, 2, 32 - self.bits) - 1),
+        .cur = self.ipv4 & (~self.mask),
+    };
 }
 
 pub fn parseIPv4(ip: []const u8) !u32 {
