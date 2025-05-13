@@ -75,23 +75,29 @@ fn run() !void {
             } else if (std.mem.eql(u8, opt, "u") or std.mem.eql(u8, opt, "unique")) {
                 unique = true;
             } else if (std.mem.eql(u8, opt, "r") or std.mem.eql(u8, opt, "exclude-reserved")) {
-                try appendCIDRv4(&excludes, try CIDRv4.parse("0.0.0.0/8"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("10.0.0.0/8"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("100.64.0.0/10"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("127.0.0.0/8"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("169.254.0.0/16"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("172.16.0.0/12"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("192.0.0.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("192.0.2.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("192.88.99.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("192.168.0.0/16"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("198.18.0.0/15"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("198.51.100.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("203.0.113.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("224.0.0.0/4"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("233.252.0.0/24"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("240.0.0.0/4"));
-                try appendCIDRv4(&excludes, try CIDRv4.parse("255.255.255.255/32"));
+                const reserved = [_][]const u8{
+                    "0.0.0.0/8",
+                    "10.0.0.0/8",
+                    "100.64.0.0/10",
+                    "127.0.0.0/8",
+                    "169.254.0.0/16",
+                    "172.16.0.0/12",
+                    "192.0.0.0/24",
+                    "192.0.2.0/24",
+                    "192.88.99.0/24",
+                    "192.168.0.0/16",
+                    "198.18.0.0/15",
+                    "198.51.100.0/24",
+                    "203.0.113.0/24",
+                    "224.0.0.0/4",
+                    "233.252.0.0/24",
+                    "240.0.0.0/4",
+                    "255.255.255.255/32",
+                };
+
+                for (reserved) |r| {
+                    try appendCIDRv4(&excludes, try CIDRv4.parse(r));
+                }
             } else {
                 try stderrw.print("unknown option {s}\n", .{arg});
                 std.process.exit(1);
