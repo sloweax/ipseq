@@ -6,6 +6,7 @@ options:
     -h, --help              shows usage and exits
     -e, --exclude           exclude cidr from output (this options can be
                             used multiple times)
+    -u, --unique            add cidr to exclude list after printing it
     -r, --exclude-reserved  exclude reserved cidrs
 ```
 

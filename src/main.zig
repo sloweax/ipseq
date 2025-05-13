@@ -39,6 +39,8 @@ fn run() !void {
     var wbuf = std.io.bufferedWriter(stdoutw);
     var w = wbuf.writer().any();
 
+    var unique = false;
+
     while (args.next()) |arg| {
         if (std.mem.startsWith(u8, arg, "-")) {
             const opt = blk: {
@@ -55,6 +57,7 @@ fn run() !void {
                 \\    -h, --help              shows usage and exits
                 \\    -e, --exclude           exclude cidr from output (this options can be
                 \\                            used multiple times)
+                \\    -u, --unique            add cidr to exclude list after printing it
                 \\    -r, --exclude-reserved  exclude reserved cidrs
                 \\
             ;
@@ -69,6 +72,8 @@ fn run() !void {
                     std.process.exit(1);
                 }
                 try appendCIDRv4(&excludes, try CIDRv4.parse(val.?));
+            } else if (std.mem.eql(u8, opt, "u") or std.mem.eql(u8, opt, "unique")) {
+                unique = true;
             } else if (std.mem.eql(u8, opt, "r") or std.mem.eql(u8, opt, "exclude-reserved")) {
                 try appendCIDRv4(&excludes, try CIDRv4.parse("0.0.0.0/8"));
                 try appendCIDRv4(&excludes, try CIDRv4.parse("10.0.0.0/8"));
@@ -109,6 +114,8 @@ fn run() !void {
             const buf = std.mem.asBytes(&ip);
             try w.print("{}.{}.{}.{}\n", .{ buf[3], buf[2], buf[1], buf[0] });
         }
+
+        if (unique) try appendCIDRv4(&excludes, i);
     }
 
     try wbuf.flush();
