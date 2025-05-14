@@ -94,7 +94,7 @@ pub fn containsCIDRv6(self: *Self, cidr: root.IPv6.CIDR) bool {
 }
 
 pub fn containsIPv4(self: *Self, ip: root.IPv4) bool {
-    if (self.ipv4s.get(ip) != null) return true;
+    if (self.ipv4s.contains(ip)) return true;
     for (self.cidrv4s.items) |c| {
         if (c.contains(ip)) return true;
     }
@@ -102,7 +102,7 @@ pub fn containsIPv4(self: *Self, ip: root.IPv4) bool {
 }
 
 pub fn containsIPv6(self: *Self, ip: root.IPv6) bool {
-    if (self.ipv6s.get(ip) != null) return true;
+    if (self.ipv6s.contains(ip)) return true;
     for (self.cidrv6s.items) |c| {
         if (c.contains(ip)) return true;
     }
