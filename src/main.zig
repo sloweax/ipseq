@@ -18,19 +18,19 @@ const Format = enum { dot, hex, raw };
 
 fn run() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var excludes = std.ArrayList(root.IPv4.CIDR).init(gpa.allocator());
+    var excludes = std.ArrayList(root.Sequence).init(gpa.allocator());
     defer excludes.deinit();
 
-    var includes = std.ArrayList(root.IPv4.CIDR).init(gpa.allocator());
-    defer includes.deinit();
+    var filter = root.Filter.init(gpa.allocator());
+    defer filter.deinit();
 
     const params = comptime clap.parseParamsComptime(
         \\-h, --help               shows usage and exits
         \\-f, --format <FMT>       output format (raw,hex,dot)
-        \\-e, --exclude <CIDR>...  exclude cidr from output (this options can be used multiple times)
-        \\-u, --unique             add cidr to exclude list after printing it
+        \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
+        \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
-        \\<CIDR>...
+        \\<SEQ>...
         \\
     );
 
@@ -39,7 +39,7 @@ fn run() !void {
 
     const parsers = comptime .{
         .FMT = clap.parsers.enumeration(Format),
-        .CIDR = root.IPv4.CIDR.parse,
+        .SEQ = root.Sequence.parse,
     };
 
     var diag = clap.Diagnostic{};
@@ -86,64 +86,87 @@ fn run() !void {
             "233.252.0.0/24",
             "240.0.0.0/4",
             "255.255.255.255/32",
+            "::/128",
+            "::1/128",
+            "::ffff:0:0/96",
+            "::ffff:0:0:0/96",
+            "64:ff9b::/96",
+            "64:ff9b:1::/48",
+            "100::/64",
+            "2001::/32",
+            "2001:20::/28",
+            "2001:db8::/32",
+            "2002::/16",
+            "3fff::/20",
+            "5f00::/16",
+            "fc00::/7",
+            "fe80::/6",
+            "ff00::/8",
         };
 
         for (reserved) |r| {
-            try appendCIDRv4(&excludes, try root.IPv4.CIDR.parse(r));
+            try filter.addSequence(try root.Sequence.parse(r));
         }
     }
 
     if (res.args.format == null) res.args.format = .dot;
 
     for (res.args.exclude) |e| {
-        try appendCIDRv4(&excludes, e);
-    }
-
-    for (res.positionals) |i| {
-        try appendCIDRv4(&includes, i);
+        try filter.addSequence(e);
     }
 
     var wbuf = std.io.bufferedWriter(stdoutw);
     var w = wbuf.writer().any();
 
-    nextcidr: for (includes.items) |i| {
-        for (excludes.items) |e| {
-            if (e.contains(i.min()) and e.contains(i.max())) continue :nextcidr;
+    for (res.positionals) |seq| {
+        if (filter.containsSequence(seq)) continue;
+
+        switch (seq.v) {
+            .cidrv4 => |v| {
+                var it = v.iterator();
+                while (it.next()) |ip| {
+                    if (filter.containsIPv4(ip)) continue;
+                    switch (res.args.format.?) {
+                        .dot => {
+                            try w.print("{}\n", .{ip});
+                        },
+                        .hex => {
+                            try w.print("{x}\n", .{ip.addr});
+                        },
+                        .raw => {
+                            try w.writeInt(u32, ip.addr, .big);
+                        },
+                    }
+                }
+            },
+            .cidrv6 => |v| {
+                var it = v.iterator();
+                while (it.next()) |ip| {
+                    if (filter.containsIPv6(ip)) continue;
+                    switch (res.args.format.?) {
+                        .dot => {
+                            try w.print("{}\n", .{ip});
+                        },
+                        .hex => {
+                            try w.print("{x}\n", .{ip.addr});
+                        },
+                        .raw => {
+                            try w.writeInt(u128, ip.addr, .big);
+                        },
+                    }
+                }
+            },
         }
 
-        var it = i.iterator();
-        nextip: while (it.next()) |ip| {
-            for (excludes.items) |e| {
-                if (e.contains(ip)) continue :nextip;
-            }
-            switch (res.args.format.?) {
-                .dot => {
-                    try w.print("{}\n", .{ip});
-                },
-                .hex => {
-                    try w.print("{x}\n", .{ip.addr});
-                },
-                .raw => {
-                    try w.writeInt(u32, ip.addr, .big);
-                },
-            }
-        }
-
-        if (res.args.unique != 0) try appendCIDRv4(&excludes, i);
+        if (res.args.unique != 0) try filter.addSequence(seq);
     }
 
     try wbuf.flush();
-}
-
-fn appendCIDRv4(a: *std.ArrayList(root.IPv4.CIDR), cidr: root.IPv4.CIDR) !void {
-    for (a.items) |c| {
-        if (c.contains(cidr.min()) and c.contains(cidr.max())) return;
-    }
-    try a.append(cidr);
 }
 
 test {
     _ = @import("cidrv4_test.zig");
     _ = @import("ipv6.zig");
     _ = @import("cidrv6_test.zig");
+    _ = @import("sequence.zig");
 }

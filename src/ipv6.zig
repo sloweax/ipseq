@@ -1,6 +1,8 @@
 const std = @import("std");
 const Self = @This();
 pub const CIDR = @import("cidrv6.zig");
+const native_endian = builtin.cpu.arch.endian();
+const builtin = @import("builtin");
 
 addr: u128,
 
@@ -80,6 +82,18 @@ pub fn eqlo(a: Self, b: ?Self) bool {
         return a.eql(c);
     }
     return false;
+}
+
+pub fn format(self: Self, comptime fmt: []const u8, options: std.fmt.FormatOptions, writer: anytype) !void {
+    _ = fmt;
+    _ = options;
+    var tmp = self.addr;
+    var h: [8]u16 = undefined;
+    for (0..8) |i| {
+        h[7 - i] = @truncate(tmp);
+        tmp >>= 16;
+    }
+    try writer.print("{x}:{x}:{x}:{x}:{x}:{x}:{x}:{x}", .{ h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7] });
 }
 
 test "test parse" {
