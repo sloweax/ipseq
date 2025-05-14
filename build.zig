@@ -19,6 +19,9 @@ pub fn build(b: *std.Build) !void {
     });
     exe.subsystem = subsystem;
 
+    const clap = b.dependency("clap", .{});
+    exe.root_module.addImport("clap", clap.module("clap"));
+
     const test_step = b.step("test", "Run unit tests");
     const unit_tests = b.addTest(.{
         .root_source_file = b.path("src/main.zig"),
