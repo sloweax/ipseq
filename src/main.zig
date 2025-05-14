@@ -129,11 +129,9 @@ fn run() !void {
 
         switch (seq.v) {
             .ipv4 => |ip| {
-                if (filter.containsIPv4(ip)) continue;
                 try printIP(res.args.format.?, root.IPv4, ip, w);
             },
             .ipv6 => |ip| {
-                if (filter.containsIPv6(ip)) continue;
                 try printIP(res.args.format.?, root.IPv6, ip, w);
             },
             .cidrv4 => |v| {
