@@ -1,8 +1,8 @@
 const clap = @import("clap");
 const std = @import("std");
 const builtin = @import("builtin");
+const root = @import("root.zig");
 const native_endian = builtin.cpu.arch.endian();
-const CIDRv4 = @import("cidrv4.zig");
 
 pub fn main() void {
     run() catch |err| switch (err) {
@@ -19,10 +19,10 @@ const Format = enum { dot, hex, raw };
 
 fn run() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var excludes = std.ArrayList(CIDRv4).init(gpa.allocator());
+    var excludes = std.ArrayList(root.IPv4.CIDR).init(gpa.allocator());
     defer excludes.deinit();
 
-    var includes = std.ArrayList(CIDRv4).init(gpa.allocator());
+    var includes = std.ArrayList(root.IPv4.CIDR).init(gpa.allocator());
     defer includes.deinit();
 
     const params = comptime clap.parseParamsComptime(
@@ -40,7 +40,7 @@ fn run() !void {
 
     const parsers = comptime .{
         .FMT = clap.parsers.enumeration(Format),
-        .CIDR = CIDRv4.parse,
+        .CIDR = root.IPv4.CIDR.parse,
     };
 
     var diag = clap.Diagnostic{};
@@ -90,7 +90,7 @@ fn run() !void {
         };
 
         for (reserved) |r| {
-            try appendCIDRv4(&excludes, try CIDRv4.parse(r));
+            try appendCIDRv4(&excludes, try root.IPv4.CIDR.parse(r));
         }
     }
 
@@ -130,10 +130,10 @@ fn run() !void {
                     }
                 },
                 .hex => {
-                    try w.print("{x}\n", .{ip});
+                    try w.print("{x}\n", .{ip.addr});
                 },
                 .raw => {
-                    try w.writeInt(u32, ip, .big);
+                    try w.writeInt(u32, ip.addr, .big);
                 },
             }
         }
@@ -144,7 +144,7 @@ fn run() !void {
     try wbuf.flush();
 }
 
-fn appendCIDRv4(a: *std.ArrayList(CIDRv4), cidr: CIDRv4) !void {
+fn appendCIDRv4(a: *std.ArrayList(root.IPv4.CIDR), cidr: root.IPv4.CIDR) !void {
     for (a.items) |c| {
         if (c.contains(cidr.min()) and c.contains(cidr.max())) return;
     }
