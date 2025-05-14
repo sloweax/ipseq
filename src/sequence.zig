@@ -5,11 +5,15 @@ const Self = @This();
 const Type = enum {
     cidrv4,
     cidrv6,
+    ipv4,
+    ipv6,
 };
 
 const Val = union(Type) {
     cidrv4: root.IPv4.CIDR,
     cidrv6: root.IPv6.CIDR,
+    ipv4: root.IPv4,
+    ipv6: root.IPv6,
 };
 
 v: Val,
@@ -22,6 +26,8 @@ fn optParse(comptime T: type, s: []const u8) ?T {
 
 pub fn parse(seq: []const u8) !@This() {
     const ts = comptime [_]type{
+        root.IPv4,
+        root.IPv6,
         root.IPv4.CIDR,
         root.IPv6.CIDR,
     };
@@ -29,6 +35,12 @@ pub fn parse(seq: []const u8) !@This() {
     inline for (ts) |t| {
         if (optParse(t, seq)) |v| {
             switch (t) {
+                root.IPv4 => {
+                    return .{ .v = .{ .ipv4 = v } };
+                },
+                root.IPv6 => {
+                    return .{ .v = .{ .ipv6 = v } };
+                },
                 root.IPv4.CIDR => {
                     return .{ .v = .{ .cidrv4 = v } };
                 },

@@ -18,8 +18,14 @@ const Format = enum { dot, hex, raw };
 
 fn run() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    var excludes = std.ArrayList(root.Sequence).init(gpa.allocator());
-    defer excludes.deinit();
+    defer {
+        switch (gpa.deinit()) {
+            .ok => {},
+            .leak => {
+                std.io.getStdErr().writer().print("Memory leak detected\n", .{}) catch {};
+            },
+        }
+    }
 
     var filter = root.Filter.init(gpa.allocator());
     defer filter.deinit();
@@ -30,7 +36,7 @@ fn run() !void {
         \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
         \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
-        \\<SEQ>...                 CIDRv4 | CIDRv6
+        \\<SEQ>...                 IPv4 | IPv6 | CIDRv4 | CIDRv6
         \\
     );
 
@@ -122,6 +128,34 @@ fn run() !void {
         if (filter.containsSequence(seq)) continue;
 
         switch (seq.v) {
+            .ipv4 => |ip| {
+                if (filter.containsIPv4(ip)) continue;
+                switch (res.args.format.?) {
+                    .dot => {
+                        try w.print("{}\n", .{ip});
+                    },
+                    .hex => {
+                        try w.print("{x}\n", .{ip.addr});
+                    },
+                    .raw => {
+                        try w.writeInt(u32, ip.addr, .big);
+                    },
+                }
+            },
+            .ipv6 => |ip| {
+                if (filter.containsIPv6(ip)) continue;
+                switch (res.args.format.?) {
+                    .dot => {
+                        try w.print("{}\n", .{ip});
+                    },
+                    .hex => {
+                        try w.print("{x}\n", .{ip.addr});
+                    },
+                    .raw => {
+                        try w.writeInt(u128, ip.addr, .big);
+                    },
+                }
+            },
             .cidrv4 => |v| {
                 var it = v.iterator();
                 while (it.next()) |ip| {

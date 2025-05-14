@@ -19,7 +19,7 @@ options:
             exclude reserved cidrs
 
     <SEQ>...
-            CIDRv4 | CIDRv6
+            IPv4 | IPv6 | CIDRv4 | CIDRv6
 
 ```
 
