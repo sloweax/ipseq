@@ -1,6 +1,6 @@
 # Usage
 ```
-usage: ./zig-out/bin/ipseq [-hur] [-f <FMT>] [-e <CIDR>...] <CIDR>...
+usage: ipseq [-hur] [-f <FMT>] [-e <CIDR>...] <CIDR>...
 
 options:
     -h, --help
