@@ -2,7 +2,6 @@ const clap = @import("clap");
 const std = @import("std");
 const builtin = @import("builtin");
 const root = @import("root.zig");
-const native_endian = builtin.cpu.arch.endian();
 
 pub fn main() void {
     run() catch |err| switch (err) {
@@ -119,15 +118,7 @@ fn run() !void {
             }
             switch (res.args.format.?) {
                 .dot => {
-                    const buf = std.mem.asBytes(&ip);
-                    switch (native_endian) {
-                        .little => {
-                            try w.print("{}.{}.{}.{}\n", .{ buf[3], buf[2], buf[1], buf[0] });
-                        },
-                        .big => {
-                            try w.print("{}.{}.{}.{}\n", .{ buf[0], buf[1], buf[2], buf[3] });
-                        },
-                    }
+                    try w.print("{}\n", .{ip});
                 },
                 .hex => {
                     try w.print("{x}\n", .{ip.addr});
