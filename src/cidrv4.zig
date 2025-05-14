@@ -29,8 +29,9 @@ pub fn min(self: Self) u32 {
 }
 
 pub fn max(self: Self) u32 {
-    if (self.bits() == 0) return std.math.maxInt(u32);
-    return self.ipv4 | (std.math.pow(u32, 2, 32 - self.bits()) - 1);
+    const b = self.bits();
+    if (b == 0) return std.math.maxInt(u32);
+    return self.ipv4 | (std.math.pow(u32, 2, 32 - b) - 1);
 }
 
 pub fn contains(self: Self, ipv4: u32) bool {
@@ -46,6 +47,7 @@ pub fn parse(cidr: []const u8) !Self {
     const mask = it.next();
     if (addr == null) return error.InvalidCIDRv4;
     if (mask == null) return error.InvalidCIDRv4;
+    if (it.next() != null) return error.InvalidCIDRv4;
     const a = try parseIPv4(addr.?);
     const b = try std.fmt.parseInt(u32, mask.?, 0);
     if (b > 32) return error.InvalidCIDRv4;
@@ -58,7 +60,7 @@ pub fn iterator(self: Self) Iterator {
     return .{
         .cidr = self,
         .end = self.max() & (~self.mask),
-        .cur = self.ipv4 & (~self.mask),
+        .cur = self.min() & (~self.mask),
     };
 }
 
