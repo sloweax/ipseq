@@ -122,7 +122,7 @@ fn run() !void {
     }
 
     var wbuf = std.io.bufferedWriter(stdoutw);
-    var w = wbuf.writer().any();
+    const w = wbuf.writer().any();
 
     for (res.positionals) |seq| {
         if (filter.containsSequence(seq)) continue;
@@ -130,64 +130,24 @@ fn run() !void {
         switch (seq.v) {
             .ipv4 => |ip| {
                 if (filter.containsIPv4(ip)) continue;
-                switch (res.args.format.?) {
-                    .dot => {
-                        try w.print("{}\n", .{ip});
-                    },
-                    .hex => {
-                        try w.print("{x}\n", .{ip.addr});
-                    },
-                    .raw => {
-                        try w.writeInt(u32, ip.addr, .big);
-                    },
-                }
+                try printIP(res.args.format.?, root.IPv4, ip, w);
             },
             .ipv6 => |ip| {
                 if (filter.containsIPv6(ip)) continue;
-                switch (res.args.format.?) {
-                    .dot => {
-                        try w.print("{}\n", .{ip});
-                    },
-                    .hex => {
-                        try w.print("{x}\n", .{ip.addr});
-                    },
-                    .raw => {
-                        try w.writeInt(u128, ip.addr, .big);
-                    },
-                }
+                try printIP(res.args.format.?, root.IPv6, ip, w);
             },
             .cidrv4 => |v| {
                 var it = v.iterator();
                 while (it.next()) |ip| {
                     if (filter.containsIPv4(ip)) continue;
-                    switch (res.args.format.?) {
-                        .dot => {
-                            try w.print("{}\n", .{ip});
-                        },
-                        .hex => {
-                            try w.print("{x}\n", .{ip.addr});
-                        },
-                        .raw => {
-                            try w.writeInt(u32, ip.addr, .big);
-                        },
-                    }
+                    try printIP(res.args.format.?, root.IPv4, ip, w);
                 }
             },
             .cidrv6 => |v| {
                 var it = v.iterator();
                 while (it.next()) |ip| {
                     if (filter.containsIPv6(ip)) continue;
-                    switch (res.args.format.?) {
-                        .dot => {
-                            try w.print("{}\n", .{ip});
-                        },
-                        .hex => {
-                            try w.print("{x}\n", .{ip.addr});
-                        },
-                        .raw => {
-                            try w.writeInt(u128, ip.addr, .big);
-                        },
-                    }
+                    try printIP(res.args.format.?, root.IPv6, ip, w);
                 }
             },
         }
@@ -196,6 +156,38 @@ fn run() !void {
     }
 
     try wbuf.flush();
+}
+
+fn printIP(f: Format, comptime iptype: type, ip: anytype, writer: anytype) !void {
+    switch (iptype) {
+        root.IPv4 => {
+            switch (f) {
+                .dot => {
+                    try writer.print("{}\n", .{ip});
+                },
+                .hex => {
+                    try writer.print("{x}\n", .{ip.addr});
+                },
+                .raw => {
+                    try writer.writeInt(u32, ip.addr, .big);
+                },
+            }
+        },
+        root.IPv6 => {
+            switch (f) {
+                .dot => {
+                    try writer.print("{}\n", .{ip});
+                },
+                .hex => {
+                    try writer.print("{x}\n", .{ip.addr});
+                },
+                .raw => {
+                    try writer.writeInt(u128, ip.addr, .big);
+                },
+            }
+        },
+        else => unreachable,
+    }
 }
 
 test {
