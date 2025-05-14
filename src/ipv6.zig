@@ -1,5 +1,6 @@
 const std = @import("std");
 const Self = @This();
+pub const CIDR = @import("cidrv6.zig");
 
 addr: u128,
 

@@ -145,4 +145,5 @@ fn appendCIDRv4(a: *std.ArrayList(root.IPv4.CIDR), cidr: root.IPv4.CIDR) !void {
 test {
     _ = @import("cidrv4_test.zig");
     _ = @import("ipv6.zig");
+    _ = @import("cidrv6_test.zig");
 }
