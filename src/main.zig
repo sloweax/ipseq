@@ -30,7 +30,7 @@ fn run() !void {
         \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
         \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
-        \\<SEQ>...
+        \\<SEQ>...                 CIDRv4 | CIDRv6
         \\
     );
 

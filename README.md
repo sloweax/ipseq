@@ -1,6 +1,6 @@
 # Usage
 ```
-usage: ipseq [-hur] [-f <FMT>] [-e <CIDR>...] <CIDR>...
+usage: ipseq [-hur] [-f <FMT>] [-e <SEQ>...] <SEQ>...
 
 options:
     -h, --help
@@ -9,16 +9,17 @@ options:
     -f, --format <FMT>
             output format (raw,hex,dot)
 
-    -e, --exclude <CIDR>...
-            exclude cidr from output (this options can be used multiple times)
+    -e, --exclude <SEQ>...
+            exclude sequence from output (this options can be used multiple times)
 
     -u, --unique
-            add cidr to exclude list after printing it
+            add sequence to exclude list after printing it
 
     -r, --exclude-reserved
             exclude reserved cidrs
 
-    <CIDR>...
+    <SEQ>...
+            CIDRv4 | CIDRv6
 
 ```
 
