@@ -38,17 +38,3 @@ test "test min max" {
     try std.testing.expect(cidr.min().eql(try IPv6.parse("1:2:3:4::1")));
     try std.testing.expect(cidr.max().eql(try IPv6.parse("1:2:3:4:ffff:ffff:ffff:ffff")));
 }
-
-// test "test contains" {
-//     var cidr = try CIDRv4.parse("192.168.10.0/24");
-//     try std.testing.expect(cidr.contains(try IPv4.parse("192.168.10.0")));
-//     try std.testing.expect(cidr.contains(try IPv4.parse("192.168.10.255")));
-//     try std.testing.expect(!cidr.contains(try IPv4.parse("192.168.11.0")));
-//     try std.testing.expect(!cidr.contains(try IPv4.parse("192.168.9.0")));
-//     cidr = try CIDRv4.parse("192.168.10.1/24");
-//     try std.testing.expect(!cidr.contains(try IPv4.parse("192.168.10.0")));
-//     try std.testing.expect(cidr.contains(try IPv4.parse("192.168.10.1")));
-//     try std.testing.expect(cidr.contains(try IPv4.parse("192.168.10.255")));
-//     try std.testing.expect(!cidr.contains(try IPv4.parse("192.168.11.0")));
-//     try std.testing.expect(!cidr.contains(try IPv4.parse("192.168.9.0")));
-// }
