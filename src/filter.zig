@@ -7,14 +7,16 @@ cidrv4s: std.ArrayList(root.IPv4.CIDR),
 cidrv6s: std.ArrayList(root.IPv6.CIDR),
 ipv4s: std.AutoHashMap(root.IPv4, void),
 ipv6s: std.AutoHashMap(root.IPv6, void),
+seq_expansion: ?u129,
 
-pub fn init(a: std.mem.Allocator) Self {
+pub fn init(a: std.mem.Allocator, x: ?u129) Self {
     return .{
         .a = a,
         .cidrv4s = std.ArrayList(root.IPv4.CIDR).init(a),
         .cidrv6s = std.ArrayList(root.IPv6.CIDR).init(a),
         .ipv4s = std.AutoHashMap(root.IPv4, void).init(a),
         .ipv6s = std.AutoHashMap(root.IPv6, void).init(a),
+        .seq_expansion = x,
     };
 }
 
@@ -28,9 +30,27 @@ pub fn deinit(self: *Self) void {
 pub fn addSequence(self: *Self, seq: root.Sequence) !void {
     switch (seq.v) {
         .cidrv4 => |v| {
+            if (self.seq_expansion) |sz| {
+                if (sz >= seq.len()) {
+                    var it = v.iterator();
+                    while (it.next()) |ip| {
+                        try self.ipv4s.put(ip, void{});
+                    }
+                    return;
+                }
+            }
             try self.addCIDRv4(v);
         },
         .cidrv6 => |v| {
+            if (self.seq_expansion) |sz| {
+                if (sz >= seq.len()) {
+                    var it = v.iterator();
+                    while (it.next()) |ip| {
+                        try self.ipv6s.put(ip, void{});
+                    }
+                    return;
+                }
+            }
             try self.addCIDRv6(v);
         },
         .ipv4 => |v| {

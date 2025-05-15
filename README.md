@@ -1,6 +1,6 @@
 # Usage
 ```
-usage: ipseq [-hur] [-f <FMT>] [-e <SEQ>...] <SEQ>...
+usage: ipseq [-hur] [-f <FMT>] [-e <SEQ>...] [-x <SIZE>] <SEQ>...
 
 options:
     -h, --help
@@ -17,6 +17,9 @@ options:
 
     -r, --exclude-reserved
             exclude reserved cidrs
+
+    -x, --expand-seq <SIZE>
+            if total number of possible ips in sequence is less or equal than SIZE, expand them as individual IPv4/IPv6
 
     <SEQ>...
             IPv4 | IPv6 | CIDRv4 | CIDRv6

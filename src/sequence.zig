@@ -55,9 +55,33 @@ pub fn parse(seq: []const u8) !@This() {
     return error.InvalidSequence;
 }
 
+pub fn len(self: Self) u129 {
+    switch (self.v) {
+        .ipv4, .ipv6 => {
+            return 1;
+        },
+        .cidrv4 => |v| {
+            const it = v.iterator();
+            return @as(u33, it.end - it.cur) + 1;
+        },
+        .cidrv6 => |v| {
+            const it = v.iterator();
+            return @as(u129, it.end - it.cur) + 1;
+        },
+    }
+}
+
 test "test parse" {
     var seq = try Self.parse("0/0");
     try std.testing.expect(@as(Type, seq.v) == Type.cidrv4);
     seq = try Self.parse("::/0");
     try std.testing.expect(@as(Type, seq.v) == Type.cidrv6);
+}
+
+test "test len" {
+    try std.testing.expect((try Self.parse("0")).len() == 1);
+    try std.testing.expect((try Self.parse("::")).len() == 1);
+    try std.testing.expect((try Self.parse("0/24")).len() == 256);
+    try std.testing.expect((try Self.parse("0/0")).len() == 4294967296);
+    try std.testing.expect((try Self.parse("::/0")).len() == 340282366920938463463374607431768211456);
 }

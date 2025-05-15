@@ -27,15 +27,14 @@ fn run() !void {
         }
     }
 
-    var filter = root.Filter.init(gpa.allocator());
-    defer filter.deinit();
-
     const params = comptime clap.parseParamsComptime(
         \\-h, --help               shows usage and exits
         \\-f, --format <FMT>       output format (raw,hex,dot)
         \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
         \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
+        \\-x, --expand-seq <SIZE>  if total number of possible ips in sequence is less or equal than SIZE,
+        \\                         expand them as individual IPv4/IPv6
         \\<SEQ>...                 IPv4 | IPv6 | CIDRv4 | CIDRv6
         \\
     );
@@ -46,6 +45,7 @@ fn run() !void {
     const parsers = comptime .{
         .FMT = clap.parsers.enumeration(Format),
         .SEQ = root.Sequence.parse,
+        .SIZE = clap.parsers.int(u129, 0),
     };
 
     var diag = clap.Diagnostic{};
@@ -72,6 +72,9 @@ fn run() !void {
         try clap.help(stdoutw, clap.Help, &params, .{});
         return;
     }
+
+    var filter = root.Filter.init(gpa.allocator(), res.args.@"expand-seq");
+    defer filter.deinit();
 
     if (res.args.@"exclude-reserved" > 0) {
         const reserved = [_][]const u8{
