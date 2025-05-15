@@ -33,7 +33,7 @@ fn run() !void {
         \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
         \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
-        \\-x, --expand-seq <SIZE>  if total number of possible ips in sequence is less or equal than SIZE,
+        \\-x, --expand-seq <SIZE>  if total number of possible ips in exclude sequence is less or equal than SIZE,
         \\                         expand them as individual IPv4/IPv6
         \\<SEQ>...                 IPv4 | IPv6 | CIDRv4 | CIDRv6
         \\

@@ -1,6 +1,6 @@
 # Usage
 ```
-usage: ipseq [-hur] [-f <FMT>] [-e <SEQ>...] [-x <SIZE>] <SEQ>...
+usage: ./zig-out/bin/ipseq [-hur] [-f <FMT>] [-e <SEQ>...] [-x <SIZE>] <SEQ>...
 
 options:
     -h, --help
@@ -19,7 +19,7 @@ options:
             exclude reserved cidrs
 
     -x, --expand-seq <SIZE>
-            if total number of possible ips in sequence is less or equal than SIZE, expand them as individual IPv4/IPv6
+            if total number of possible ips in exclude sequence is less or equal than SIZE, expand them as individual IPv4/IPv6
 
     <SEQ>...
             IPv4 | IPv6 | CIDRv4 | CIDRv6
