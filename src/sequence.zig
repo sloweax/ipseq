@@ -2,21 +2,12 @@ const std = @import("std");
 const root = @import("root.zig");
 const Self = @This();
 
-const Type = enum {
-    cidrv4,
-    cidrv6,
-    ipv4,
-    ipv6,
-};
-
-const Val = union(Type) {
+v: union(enum) {
     cidrv4: root.IPv4.CIDR,
     cidrv6: root.IPv6.CIDR,
     ipv4: root.IPv4,
     ipv6: root.IPv6,
-};
-
-v: Val,
+},
 
 fn optParse(comptime T: type, s: []const u8) ?T {
     return T.parse(s) catch {
@@ -73,9 +64,9 @@ pub fn len(self: Self) u129 {
 
 test "test parse" {
     var seq = try Self.parse("0/0");
-    try std.testing.expect(@as(Type, seq.v) == Type.cidrv4);
+    try std.testing.expectEqual("cidrv4", @tagName(seq.v));
     seq = try Self.parse("::/0");
-    try std.testing.expect(@as(Type, seq.v) == Type.cidrv6);
+    try std.testing.expectEqual("cidrv6", @tagName(seq.v));
 }
 
 test "test len" {
