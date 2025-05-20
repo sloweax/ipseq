@@ -80,19 +80,11 @@ pub fn containsSequence(self: *Self, seq: root.Sequence) bool {
 }
 
 pub fn addCIDRv4(self: *Self, cidr: root.IPv4.CIDR) !void {
-    if (cidr.bits() == 32) {
-        try self.ipv4s.put(cidr.min(), void{});
-        return;
-    }
     if (!self.containsCIDRv4(cidr))
         try self.cidrv4s.append(cidr);
 }
 
 pub fn addCIDRv6(self: *Self, cidr: root.IPv6.CIDR) !void {
-    if (cidr.bits() == 128) {
-        try self.ipv6s.put(cidr.min(), void{});
-        return;
-    }
     if (!self.containsCIDRv6(cidr))
         try self.cidrv6s.append(cidr);
 }
