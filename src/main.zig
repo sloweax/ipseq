@@ -196,8 +196,8 @@ fn printIP(f: Format, comptime iptype: type, ip: iptype, writer: anytype) !void 
 }
 
 test {
-    _ = @import("cidrv4_test.zig");
+    _ = @import("cidrv4.zig");
     _ = @import("ipv6.zig");
-    _ = @import("cidrv6_test.zig");
+    _ = @import("cidrv6.zig");
     _ = @import("sequence.zig");
 }
