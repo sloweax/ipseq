@@ -32,9 +32,11 @@ pub fn addSequence(self: *Self, seq: root.Sequence) !void {
         .cidrv4 => |v| {
             if (self.seq_expansion) |sz| {
                 if (sz >= seq.len()) {
-                    var it = v.iterator();
-                    while (it.next()) |ip| {
-                        try self.ipv4s.put(ip, void{});
+                    var ip = v.min().addr;
+                    const max = v.max().addr;
+                    while (true) : (ip += 1) {
+                        try self.ipv4s.put(.{ .addr = ip }, void{});
+                        if (ip == max) break;
                     }
                     return;
                 }
@@ -44,9 +46,11 @@ pub fn addSequence(self: *Self, seq: root.Sequence) !void {
         .cidrv6 => |v| {
             if (self.seq_expansion) |sz| {
                 if (sz >= seq.len()) {
-                    var it = v.iterator();
-                    while (it.next()) |ip| {
-                        try self.ipv6s.put(ip, void{});
+                    var ip = v.min().addr;
+                    const max = v.max().addr;
+                    while (true) : (ip += 1) {
+                        try self.ipv6s.put(.{ .addr = ip }, void{});
+                        if (ip == max) break;
                     }
                     return;
                 }

@@ -7,25 +7,6 @@ mask: u128,
 
 const Self = @This();
 
-const Iterator = struct {
-    cidr: Self,
-    end: u128,
-    cur: u128 = 0,
-    eof: bool = false,
-
-    pub fn next(self: *@This()) ?IPv6 {
-        if (self.eof) return null;
-        var tmp = self.cidr.ipv6.addr & self.cidr.mask;
-        tmp |= self.cur;
-        if (self.cur >= self.end) {
-            self.eof = true;
-        } else {
-            self.cur += 1;
-        }
-        return .{ .addr = tmp };
-    }
-};
-
 pub fn min(self: Self) IPv6 {
     return self.ipv6;
 }
@@ -58,14 +39,6 @@ pub fn parse(cidr: []const u8) !Self {
     var m: u128 = std.math.maxInt(u128);
     m = std.math.shl(u128, m, 128 - b);
     return .{ .ipv6 = a, .mask = m };
-}
-
-pub fn iterator(self: Self) Iterator {
-    return .{
-        .cidr = self,
-        .end = self.max().addr & (~self.mask),
-        .cur = self.min().addr & (~self.mask),
-    };
 }
 
 pub fn bits(self: Self) u8 {

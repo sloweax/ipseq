@@ -17,33 +17,6 @@ test "test parse" {
     try std.testing.expectError(error.InvalidIPv4, CIDRv4.parse("192.168.10.p/24"));
 }
 
-test "test iterator" {
-    var cidr = try CIDRv4.parse("192.168.0.8/32");
-    var it = cidr.iterator();
-    try std.testing.expect((try IPv4.parse("192.168.0.8")).eqlo(it.next()));
-    try std.testing.expect(it.next() == null);
-
-    cidr = try CIDRv4.parse("192.168.0.8/31");
-    it = cidr.iterator();
-    try std.testing.expect((try IPv4.parse("192.168.0.8")).eqlo(it.next()));
-    try std.testing.expect((try IPv4.parse("192.168.0.9")).eqlo(it.next()));
-    try std.testing.expect(it.next() == null);
-
-    cidr = try CIDRv4.parse("0.0.0.0/0");
-    it = cidr.iterator();
-    try std.testing.expect((try IPv4.parse("0.0.0.0")).eqlo(it.next()));
-    try std.testing.expect((try IPv4.parse("0.0.0.1")).eqlo(it.next()));
-    it.cur = std.math.maxInt(u32);
-    try std.testing.expect((try IPv4.parse("255.255.255.255")).eqlo(it.next()));
-    try std.testing.expect(it.next() == null);
-
-    cidr = try CIDRv4.parse("192.168.0.0/16");
-    it = cidr.iterator();
-    it.cur += 255;
-    try std.testing.expect((try IPv4.parse("192.168.0.255")).eqlo(it.next()));
-    try std.testing.expect((try IPv4.parse("192.168.1.0")).eqlo(it.next()));
-}
-
 test "test min max" {
     var cidr = try CIDRv4.parse("192.168.10.0/24");
     try std.testing.expect(cidr.min().eql(try IPv4.parse("192.168.10.0")));

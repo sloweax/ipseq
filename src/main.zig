@@ -138,17 +138,21 @@ fn run() !void {
                 try printIP(res.args.format.?, root.IPv6, ip, w);
             },
             .cidrv4 => |v| {
-                var it = v.iterator();
-                while (it.next()) |ip| {
-                    if (filter.containsIPv4(ip)) continue;
-                    try printIP(res.args.format.?, root.IPv4, ip, w);
+                var ip = v.min().addr;
+                const max = v.max().addr;
+                while (true) : (ip += 1) {
+                    if (!filter.containsIPv4(.{ .addr = ip }))
+                        try printIP(res.args.format.?, root.IPv4, .{ .addr = ip }, w);
+                    if (ip == max) break;
                 }
             },
             .cidrv6 => |v| {
-                var it = v.iterator();
-                while (it.next()) |ip| {
-                    if (filter.containsIPv6(ip)) continue;
-                    try printIP(res.args.format.?, root.IPv6, ip, w);
+                var ip = v.min().addr;
+                const max = v.max().addr;
+                while (true) : (ip += 1) {
+                    if (!filter.containsIPv6(.{ .addr = ip }))
+                        try printIP(res.args.format.?, root.IPv6, .{ .addr = ip }, w);
+                    if (ip == max) break;
                 }
             },
         }
@@ -159,7 +163,7 @@ fn run() !void {
     try wbuf.flush();
 }
 
-fn printIP(f: Format, comptime iptype: type, ip: anytype, writer: anytype) !void {
+fn printIP(f: Format, comptime iptype: type, ip: iptype, writer: anytype) !void {
     switch (iptype) {
         root.IPv4 => {
             switch (f) {

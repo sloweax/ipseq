@@ -12,19 +12,6 @@ test "test parse" {
     try std.testing.expectError(error.InvalidCIDRv6, CIDRv6.parse("::/129"));
 }
 
-test "test iterator" {
-    var cidr = try CIDRv6.parse("1:2:3:4::/128");
-    var it = cidr.iterator();
-    try std.testing.expect((try IPv6.parse("1:2:3:4::")).eqlo(it.next()));
-    try std.testing.expect(it.next() == null);
-
-    cidr = try CIDRv6.parse("1:2:3:4::/127");
-    it = cidr.iterator();
-    try std.testing.expect((try IPv6.parse("1:2:3:4::")).eqlo(it.next()));
-    try std.testing.expect((try IPv6.parse("1:2:3:4::1")).eqlo(it.next()));
-    try std.testing.expect(it.next() == null);
-}
-
 test "test min max" {
     var cidr = try CIDRv6.parse("1:2:3:4::/64");
     try std.testing.expect(cidr.min().eql(try IPv6.parse("1:2:3:4::")));
