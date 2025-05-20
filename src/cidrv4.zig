@@ -45,6 +45,17 @@ pub fn bits(self: Self) u6 {
     return @popCount(self.mask);
 }
 
+pub fn len(self: Self) u33 {
+    return @as(u33, self.max().addr - self.min().addr) + 1;
+}
+
+test "test len" {
+    var cidr = try Self.parse("192.168.10.0/24");
+    try std.testing.expectEqual(256, cidr.len());
+    cidr = try Self.parse("0.0.0.0/0");
+    try std.testing.expectEqual(256 * 256 * 256 * 256, cidr.len());
+}
+
 test "test parse" {
     var cidr = try Self.parse("192.168.10.0/24");
     try std.testing.expect(cidr.bits() == 24);

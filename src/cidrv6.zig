@@ -45,6 +45,19 @@ pub fn bits(self: Self) u8 {
     return @popCount(self.mask);
 }
 
+pub fn len(self: Self) u129 {
+    return @as(u129, self.max().addr - self.min().addr) + 1;
+}
+
+test "test len" {
+    var cidr = try Self.parse("1:2:3:4::/64");
+    try std.testing.expectEqual(std.math.pow(u129, 2, 64), cidr.len());
+    cidr = try Self.parse("::/0");
+    try std.testing.expectEqual(std.math.pow(u129, 2, 128), cidr.len());
+    cidr = try Self.parse("::/1");
+    try std.testing.expectEqual(std.math.pow(u129, 2, 127), cidr.len());
+}
+
 test "test parse" {
     var cidr = try Self.parse("1:2:3:4::/64");
     try std.testing.expect(cidr.bits() == 64);

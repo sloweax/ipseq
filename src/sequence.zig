@@ -52,10 +52,10 @@ pub fn len(self: Self) u129 {
             return 1;
         },
         .cidrv4 => |v| {
-            return @as(u33, v.max().addr - v.min().addr) + 1;
+            return v.len();
         },
         .cidrv6 => |v| {
-            return @as(u129, v.max().addr - v.min().addr) + 1;
+            return v.len();
         },
     }
 }
