@@ -30,7 +30,7 @@ fn run() !void {
     const params = comptime clap.parseParamsComptime(
         \\-h, --help               shows usage and exits
         \\-f, --format <FMT>       output format (raw,hex,dot)
-        \\-e, --exclude <SEQ>...   exclude sequence from output (this options can be used multiple times)
+        \\-e, --exclude <SEQ>...   exclude sequence from output (this option can be used multiple times)
         \\-u, --unique             add sequence to exclude list after printing it
         \\-r, --exclude-reserved   exclude reserved cidrs
         \\-x, --expand-seq <SIZE>  if total number of possible ips in exclude sequence is less or equal than SIZE,

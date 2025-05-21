@@ -10,7 +10,7 @@ options:
             output format (raw,hex,dot)
 
     -e, --exclude <SEQ>...
-            exclude sequence from output (this options can be used multiple times)
+            exclude sequence from output (this option can be used multiple times)
 
     -u, --unique
             add sequence to exclude list after printing it
@@ -23,7 +23,6 @@ options:
 
     <SEQ>...
             IPv4 | IPv6 | CIDRv4 | CIDRv6 | Rangev4 | Rangev6
-
 ```
 
 # Example
