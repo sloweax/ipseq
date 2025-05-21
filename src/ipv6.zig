@@ -3,6 +3,7 @@ const Self = @This();
 pub const CIDR = @import("cidrv6.zig");
 const native_endian = builtin.cpu.arch.endian();
 const builtin = @import("builtin");
+pub const Range = @import("rangev6.zig");
 
 addr: u128,
 

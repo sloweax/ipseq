@@ -35,7 +35,7 @@ fn run() !void {
         \\-r, --exclude-reserved   exclude reserved cidrs
         \\-x, --expand-seq <SIZE>  if total number of possible ips in exclude sequence is less or equal than SIZE,
         \\                         expand them as individual IPv4/IPv6
-        \\<SEQ>...                 IPv4 | IPv6 | CIDRv4 | CIDRv6
+        \\<SEQ>...                 IPv4 | IPv6 | CIDRv4 | CIDRv6 | Rangev4 | Rangev6
         \\
     );
 
@@ -155,6 +155,27 @@ fn run() !void {
                     if (ip == max) break;
                 }
             },
+            .rangev4 => |v| {
+                for (@as(u9, v.start[0])..@as(u9, v.end[0]) + 1) |n1| for (@as(u9, v.start[1])..@as(u9, v.end[1]) + 1) |n2| for (@as(u9, v.start[2])..@as(u9, v.end[2]) + 1) |n3| for (@as(u9, v.start[3])..@as(u9, v.end[3]) + 1) |n4| {
+                    const addr = n4 + (n3 << 8) + (n2 << 16) + (n1 << 24);
+                    const ip: root.IPv4 = .{ .addr = @intCast(addr) };
+                    if (!filter.containsIPv4(ip))
+                        try printIP(res.args.format.?, root.IPv4, ip, w);
+                };
+            },
+            .rangev6 => |v| {
+                for (@as(u17, v.start[0])..@as(u17, v.end[0]) + 1) |n1| for (@as(u17, v.start[1])..@as(u17, v.end[1]) + 1) |n2| for (@as(u17, v.start[2])..@as(u17, v.end[2]) + 1) |n3| for (@as(u17, v.start[3])..@as(u17, v.end[3]) + 1) |n4| for (@as(u17, v.start[4])..@as(u17, v.end[4]) + 1) |n5| for (@as(u17, v.start[5])..@as(u17, v.end[5]) + 1) |n6| for (@as(u17, v.start[6])..@as(u17, v.end[6]) + 1) |n7| for (@as(u17, v.start[7])..@as(u17, v.end[7]) + 1) |n8| {
+                    const nums: [8]u16 = .{ @intCast(n1), @intCast(n2), @intCast(n3), @intCast(n4), @intCast(n5), @intCast(n6), @intCast(n7), @intCast(n8) };
+                    var addr: u128 = 0;
+                    inline for (nums) |n| {
+                        addr *= 65536;
+                        addr += n;
+                    }
+                    const ip: root.IPv6 = .{ .addr = addr };
+                    if (!filter.containsIPv6(ip))
+                        try printIP(res.args.format.?, root.IPv6, ip, w);
+                };
+            },
         }
 
         if (res.args.unique != 0) try filter.addSequence(seq);
@@ -200,4 +221,6 @@ test {
     _ = @import("ipv6.zig");
     _ = @import("cidrv6.zig");
     _ = @import("sequence.zig");
+    _ = @import("rangev4.zig");
+    _ = @import("rangev6.zig");
 }

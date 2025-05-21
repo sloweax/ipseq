@@ -7,6 +7,8 @@ v: union(enum) {
     cidrv6: root.IPv6.CIDR,
     ipv4: root.IPv4,
     ipv6: root.IPv6,
+    rangev4: root.IPv4.Range,
+    rangev6: root.IPv6.Range,
 },
 
 fn optParse(comptime T: type, s: []const u8) ?T {
@@ -18,9 +20,11 @@ fn optParse(comptime T: type, s: []const u8) ?T {
 pub fn parse(seq: []const u8) !@This() {
     const ts = comptime [_]type{
         root.IPv4,
-        root.IPv6,
         root.IPv4.CIDR,
+        root.IPv4.Range,
+        root.IPv6,
         root.IPv6.CIDR,
+        root.IPv6.Range,
     };
 
     inline for (ts) |t| {
@@ -37,6 +41,12 @@ pub fn parse(seq: []const u8) !@This() {
                 },
                 root.IPv6.CIDR => {
                     return .{ .v = .{ .cidrv6 = v } };
+                },
+                root.IPv4.Range => {
+                    return .{ .v = .{ .rangev4 = v } };
+                },
+                root.IPv6.Range => {
+                    return .{ .v = .{ .rangev6 = v } };
                 },
                 else => unreachable,
             }
@@ -55,6 +65,12 @@ pub fn len(self: Self) u129 {
             return v.len();
         },
         .cidrv6 => |v| {
+            return v.len();
+        },
+        .rangev4 => |v| {
+            return v.len();
+        },
+        .rangev6 => |v| {
             return v.len();
         },
     }
